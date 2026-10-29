@@ -1,0 +1,6 @@
+body { background: #f4f6fb; }
+.pg-nav { background: linear-gradient(90deg, #1e3a8a, #2563eb); }
+.card { border: 0; border-radius: 14px; }
+.result-card.bad { border-left: 6px solid #dc3545; }
+.result-card.good { border-left: 6px solid #198754; }
+textarea { resize: vertical; }

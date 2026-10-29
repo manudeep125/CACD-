@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Detection History</h2><button class="btn btn-outline-danger btn-sm" onclick="clearAll()">Clear History</button>
+</div>
+<div class="card shadow-sm"><div class="table-responsive">
+<table class="table table-hover mb-0"><thead><tr><th>#</th><th>Type</th><th>Input</th><th>Result</th><th>Confidence</th><th>Time</th></tr></thead>
+<tbody id="rows"><tr><td colspan="6" class="text-center">Loading...</td></tr></tbody></table></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function load() {
+  fetch('/api/history').then(r => r.json()).then(d => {
+    rows.innerHTML = d.length ? d.map(x => `<tr><td>${x.id}</td><td class="text-capitalize">${x.kind}</td>
+      <td class="text-truncate" style="max-width:320px" title="${esc(x.input)}">${esc(x.input)}</td>
+      <td><span class="badge bg-${x.label === 'Phishing' ? 'danger' : 'success'}">${x.label}</span></td>
+      <td>${x.confidence}%</td><td class="text-nowrap">${x.created_at}</td></tr>`).join('')
+      : '<tr><td colspan="6" class="text-center text-muted">No detections yet.</td></tr>';
+  }).catch(() => rows.innerHTML = '<tr><td colspan="6" class="text-danger text-center">Failed to load history.</td></tr>');
+}
+function clearAll() { if (confirm('Delete all history?')) fetch('/api/history', {method: 'DELETE'}).then(load); }
+load();
+</script>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4">Dashboard</h2>
+<div class="row g-3 mb-4" id="cards"></div>
+<div class="row g-3">
+  <div class="col-md-4"><div class="card p-3 shadow-sm"><h6>Phishing vs Safe</h6><canvas id="c1"></canvas></div></div>
+  <div class="col-md-4"><div class="card p-3 shadow-sm"><h6>Emails vs URLs</h6><canvas id="c2"></canvas></div></div>
+  <div class="col-md-4"><div class="card p-3 shadow-sm"><h6>Last 7 days</h6><canvas id="c3"></canvas></div></div>
+</div>
+<div class="card p-3 shadow-sm mt-4"><h6>Model Performance (test set)</h6>
+<div class="table-responsive"><table class="table mb-0" id="metrics"></table></div></div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+fetch('/api/stats').then(r => r.json()).then(s => {
+  const card = (t, v, c) => `<div class="col-6 col-md-3"><div class="card p-3 shadow-sm text-center"><div class="text-muted small">${t}</div><div class="fs-2 fw-bold text-${c}">${v}</div></div></div>`;
+  document.getElementById('cards').innerHTML = card('Total Scans', s.total, 'primary') + card('Phishing', s.phishing, 'danger') + card('Safe', s.safe, 'success') + card('URLs Scanned', s.urls, 'info');
+  new Chart(c1, {type: 'doughnut', data: {labels: ['Phishing', 'Safe'], datasets: [{data: [s.phishing, s.safe], backgroundColor: ['#dc3545', '#198754']}]}});
+  new Chart(c2, {type: 'pie', data: {labels: ['Emails', 'URLs'], datasets: [{data: [s.emails, s.urls], backgroundColor: ['#0d6efd', '#0dcaf0']}]}});
+  new Chart(c3, {type: 'bar', data: {labels: s.daily.map(d => d.date), datasets: [{label: 'Total', data: s.daily.map(d => d.total), backgroundColor: '#0d6efd'}, {label: 'Phishing', data: s.daily.map(d => d.phishing), backgroundColor: '#dc3545'}]}});
+  const m = s.metrics;
+  metrics.innerHTML = '<tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th></tr>' +
+    Object.entries(m).map(([k, v]) => `<tr><td class="text-capitalize">${k}</td><td>${v.accuracy}</td><td>${v.precision}</td><td>${v.recall}</td><td>${v.f1}</td></tr>`).join('');
+}).catch(() => document.getElementById('cards').innerHTML = '<div class="alert alert-danger">Could not load stats.</div>');
+</script>
+{% endblock %}
